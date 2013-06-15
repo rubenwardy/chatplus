@@ -6,9 +6,9 @@ License: CC-BY-SA to Rubenwardy
 Commands
 ========
 
-* /ignore <name> - ignore a player
-* /unignore <name> - unignore a player
-* /mail <name> <msg> - message a player (online or offline!)
+* /ignore [name] - ignore a player
+* /unignore [name] - unignore a player
+* /mail [name] [msg] - message a player (online or offline!)
 * /inbox - open your inbox
 * /inbox clear - clear your inbox
 
