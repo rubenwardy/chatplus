@@ -86,6 +86,7 @@ chatplus = {
 				chatplus.players = table
 				return
 			end
+			file:close()
 		end
 	end
 }
