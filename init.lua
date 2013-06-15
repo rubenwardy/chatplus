@@ -82,11 +82,12 @@ chatplus = {
 		local file = io.open(minetest.get_worldpath().."/chatplus.txt", "r")
 		if file then
 			local table = minetest.deserialize(file:read("*all"))
+			file:close()
+
 			if type(table) == "table" then
 				chatplus.players = table
 				return
 			end
-			file:close()
 		end
 	end
 }
