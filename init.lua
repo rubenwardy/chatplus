@@ -121,7 +121,7 @@ minetest.register_globalstep(function(dtime)
 		chatplus.count = 0
 		-- loop through player list
 		for key,value in pairs(chatplus.players) do
-			if chatplus._players[key].player and value and value.messages and chatplus._players[key].player.hud_add then
+			if chatplus._players and chatplus._players[key] and chatplus._players[key].player and value and value.messages and chatplus._players[key].player.hud_add then
 				if chatplus._players[key].msgicon then
 					chatplus._players[key].player:hud_remove(chatplus._players[key].msgicon)
 				end
