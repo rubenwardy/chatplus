@@ -54,6 +54,7 @@ chatplus = {
 		local player = chatplus.players[name]
 
 		if not player.messages or #player.messages==0 then
+			minetest.chat_send_player(name,"You have no messages")
 			return false
 		end
 
@@ -106,7 +107,9 @@ minetest.register_on_joinplayer(function(player)
 	local _player = chatplus.poke(player:get_player_name(),player)
 
 	if _player.messages and #_player.messages>0 then
-		minetest.chat_send_player(player:get_player_name(),"("..#_player.messages..") You have mail! Type /inbox to recieve")
+		-- Sending chat messages immediately on join are sometimes missed or not received at all so we delay it	
+		minetest.after(10,minetest.chat_send_player,player:get_player_name(),"("..#_player.messages..") You have mail! Type /inbox to recieve")	
+		--minetest.chat_send_player(player:get_player_name(),"("..#_player.messages..") You have mail! Type /inbox to recieve")
 	end
 end)
 
@@ -121,7 +124,7 @@ minetest.register_globalstep(function(dtime)
 		chatplus.count = 0
 		-- loop through player list
 		for key,value in pairs(chatplus.players) do
-			if chatplus._players and chatplus._players[key] and chatplus._players[key].player and value and value.messages and chatplus._players[key].player.hud_add then
+			if chatplus._players and chatplus._players[key] and chatplus._players[key].player and value and value.messages and chatplus._players[key].player.hud_add and chatplus._players[key].lastcount ~= #value.messages then				
 				if chatplus._players[key].msgicon then
 					chatplus._players[key].player:hud_remove(chatplus._players[key].msgicon)
 				end
@@ -146,8 +149,9 @@ minetest.register_globalstep(function(dtime)
 						text=#value.messages,
 						scale = {x=1,y=1},
 						alignment = {x=0.5, y=0.5},
-					})
+					})					
 				end
+				chatplus._players[key].lastcount = #value.messages
 			end
 		end
 	end
@@ -191,6 +195,7 @@ minetest.register_chatcommand("inbox", {
 			local player = chatplus.poke(name)
 			player.messages = {}
 			chatplus.save()
+			minetest.chat_send_player(name,"Inbox cleared")
 		else
 			chatplus.activate(name)
 		end
