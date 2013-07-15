@@ -1,7 +1,15 @@
 -- Chat plus
 chatplus = {
+
+	log = true,			-- change this to true to log all chat messages
+	log_file = minetest.get_worldpath().."/chatplus-log.txt",	-- default log file
+	
+	
+	log_handle = nil,	-- do not change
+	
 	-- Initialise Chat Plus
 	init = function()
+		
 		chatplus.load()
 		
 		if not chatplus.players then
@@ -80,6 +88,19 @@ chatplus = {
 	end,
 	
 	load = function()
+	
+		-- Initialize the log
+		if ( chatplus.log == true ) then
+			chatplus.log_handle = io.open(chatplus.log_file,"a+")
+			if ( chatplus.log_handle == nil ) then
+				minetest.log("action","Unable to open chat plus log file: "..chatplus.log_file)
+			else
+				minetest.log("action","Logging chat plus to: "..chatplus.log_file)
+			end	
+			-- no further checking, when writing to log we will make sure chatplus.log_handle ~= nil
+		end
+	
+		-- load saved messages
 		local file = io.open(minetest.get_worldpath().."/chatplus.txt", "r")
 		if file then
 			local table = minetest.deserialize(file:read("*all"))
@@ -94,6 +115,10 @@ chatplus = {
 }
 
 minetest.register_on_chat_message(function(name,msg)
+	if ( chatplus.log_handle ~= nil ) then
+		chatplus.log_handle:write(os.date("%m/%d/%Y %I:%M%p").." <"..name.."> "..msg.."\r\n")
+		chatplus.log_handle:flush()		
+	end
 	for key,value in pairs(chatplus.players) do
 		if not value.ignore[name]==true and key~=name then
 			minetest.chat_send_player(key,"<"..name.."> "..msg,false)
@@ -106,6 +131,11 @@ end)
 minetest.register_on_joinplayer(function(player)
 	local _player = chatplus.poke(player:get_player_name(),player)
 
+	if ( chatplus.log_handle ~= nil ) then
+		chatplus.log_handle:write(os.date("%m/%d/%Y %I:%M%p").." "..player:get_player_name().." joined\r\n")
+		chatplus.log_handle:flush()
+	end
+
 	if _player.messages and #_player.messages>0 then
 		-- Sending chat messages immediately on join are sometimes missed or not received at all so we delay it	
 		minetest.after(10,minetest.chat_send_player,player:get_player_name(),"("..#_player.messages..") You have mail! Type /inbox to recieve")	
@@ -116,6 +146,10 @@ end)
 minetest.register_on_leaveplayer(function(player)
 	chatplus.poke(player:get_player_name(),"end")
 	chatplus.players[player:get_player_name()].enabled = false
+	if ( chatplus.log_handle ~= nil ) then
+		chatplus.log_handle:write(os.date("%m/%d/%Y %I:%M%p").." "..player:get_player_name().." disconnected\r\n")
+		chatplus.log_handle:flush()
+	end
 end)
 
 minetest.register_globalstep(function(dtime)
