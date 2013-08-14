@@ -1,15 +1,13 @@
 -- Chat plus
 chatplus = {
-
 	log = true,			-- change this to true to log all chat messages
 	log_file = minetest.get_worldpath().."/chatplus-log.txt",	-- default log file
-	
-	
+	distance = minetest.setting_get("chatplus_distance"),
 	log_handle = nil,	-- do not change
+
 	
 	-- Initialise Chat Plus
 	init = function()
-		
 		chatplus.load()
 		
 		if not chatplus.players then
@@ -88,7 +86,6 @@ chatplus = {
 	end,
 	
 	load = function()
-	
 		-- Initialize the log
 		if ( chatplus.log == true ) then
 			chatplus.log_handle = io.open(chatplus.log_file,"a+")
@@ -111,21 +108,70 @@ chatplus = {
 				return
 			end
 		end
+	end,
+	_handlers = {},
+	register_handler = function(func,place)
+		if not place then
+			table.insert(chatplus._handlers,func)
+		else
+			table.insert(chatplus._handlers,place,func)
+		end
 	end
 }
 
+function chatplus.get_distance(v, w)
+    return math.sqrt(
+        math.pow(v.x - w.x, 2) +
+        math.pow(v.y - w.y, 2) +
+        math.pow(v.z - w.z, 2)
+    )
+end
+
+-- Register handler caller
 minetest.register_on_chat_message(function(name,msg)
 	if ( chatplus.log_handle ~= nil ) then
 		chatplus.log_handle:write(os.date("%m/%d/%Y %I:%M%p").." <"..name.."> "..msg.."\r\n")
-		chatplus.log_handle:flush()		
+		chatplus.log_handle:flush()
 	end
 	for key,value in pairs(chatplus.players) do
-		if not value.ignore[name]==true and key~=name then
+		local res = nil
+		for i=1,#chatplus._handlers do
+			if chatplus._handlers[i] then
+				res = chatplus._handlers[i](name,key,msg)
+				
+				if res ~= nil then
+					break
+				end
+			end
+		end
+		if (res == nil or res == true) and key~=name  then
 			minetest.chat_send_player(key,"<"..name.."> "..msg,false)
-		end		
+		end
 	end
 
 	return true
+end)
+
+-- Register ignore
+chatplus.register_handler(function(from,to,msg)
+	if chatplus.players[to] and chatplus.players[to].ignore and chatplus.players[to].ignore[from]==true then
+		return false
+	end
+	return nil
+end)
+
+chatplus.register_handler(function(from,to,msg)
+	local from_o = minetest.get_player_by_name(from)
+	local to_o = minetest.get_player_by_name(to)
+
+	if not from_o or not to_o then
+		return nil
+	end
+
+	if chatplus.distance ~= 0 and chatplus.distance ~= nil and (chatplus.get_distance(from_o:getpos(),to_o:getpos()) > tonumber(chatplus.distance)) then
+		return false
+	end
+	return nil
 end)
 
 minetest.register_on_joinplayer(function(player)
