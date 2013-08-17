@@ -160,6 +160,7 @@ chatplus.register_handler(function(from,to,msg)
 	return nil
 end)
 
+if chatplus.distance then
 chatplus.register_handler(function(from,to,msg)
 	local from_o = minetest.get_player_by_name(from)
 	local to_o = minetest.get_player_by_name(to)
@@ -173,6 +174,7 @@ chatplus.register_handler(function(from,to,msg)
 	end
 	return nil
 end)
+end
 
 minetest.register_on_joinplayer(function(player)
 	local _player = chatplus.poke(player:get_player_name(),player)
