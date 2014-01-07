@@ -81,7 +81,7 @@ function chatplus.clean_players()
 			value.inbox = value.messages
 			value.messages = nil			
 		end
-	
+		
 		if (
 			(not value.inbox or #value.inbox==0) and
 			(not value.ignore or #value.ignore==0)
@@ -104,7 +104,7 @@ function chatplus.poke(name,player)
 		chatplus.players[name] = {}
 	end
 	check(name,"ignore")
-	check(name,"messages")
+	check(name,"inbox")
 	
 	chatplus.players[name].enabled = true
 	
@@ -283,7 +283,6 @@ minetest.register_chatcommand("mail", {
 		chatplus.log_handle:write(os.date("%d/%m/%Y %I:%M%p").." To: "..to..", From: "..name..", MSG: "..msg)
 		chatplus.log_handle:flush()
 	end
-		
 		if chatplus.players[to] then
 			table.insert(chatplus.players[to].inbox,os.date("%d/%m/%Y %I:%M%p").." <"..name..">: "..msg)
 			minetest.chat_send_player(name,"Message sent")
