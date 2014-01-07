@@ -340,3 +340,25 @@ minetest.register_globalstep(function(dtime)
 		end
 	end
 end)
+
+chatplus.register_handler(function(from,to,msg)
+	if chatplus.setting("distance") <= 0 then
+		return nil
+	end
+
+	local from_o = minetest.get_player_by_name(from)
+	local to_o = minetest.get_player_by_name(to)
+
+	if not from_o or not to_o then
+		return nil
+	end
+
+	if (
+		chatplus.setting("distance") ~= 0 and
+		chatplus.setting("distance") ~= nil and
+		(vector.distance(from_o:getpos(),to_o:getpos()) > tonumber(chatplus.setting("distance")))
+	)then
+		return false
+	end
+	return nil
+end)
