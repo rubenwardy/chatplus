@@ -11,6 +11,9 @@ Commands
 * /mail [name] [msg] - message a player (online or offline!)
 * /inbox - open your inbox
 * /inbox clear - clear your inbox
+* /inbox text - see the text version of the inbox.
+* /inbox txt - alias of /inbox text
+* /inbox t - alias of /inbox text
 
 HUD
 ===
