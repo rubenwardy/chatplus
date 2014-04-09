@@ -7,6 +7,7 @@ chatplus = {
 	log_file = minetest.get_worldpath().."/chatplus-log.txt",
 	_defsettings = {
 		log = true,
+		use_gui = true,
 		distance = 0
 	}
 }
@@ -230,7 +231,7 @@ minetest.register_chatcommand("unignore", {
 })
 
 -- inbox
-function chatplus.showInbox(name)
+function chatplus.showInbox(name,forcetest)
 	if not chatplus.players[name] then
 		return false
 	end
@@ -241,12 +242,26 @@ function chatplus.showInbox(name)
 		minetest.chat_send_player(name,"Your inbox is empty!")
 		return false
 	end
-
-	minetest.chat_send_player(name,"("..#player.inbox..") You have mail:")
-	for i=1,#player.inbox do
-		minetest.chat_send_player(name,player.inbox[i],false)
+	local setting = chatplus.setting("use_gui")
+	if (setting == true or setting == "true" or setting == "1") and not forcetest then
+		minetest.chat_send_player(name,"Showing your inbox to you.")
+		local fs = "size[10,5]textlist[0,0;9.75,5;inbox;"
+		for i=1,#player.inbox do
+			if i > 1 then
+				fs = fs .. ","
+			end
+			fs = fs .. minetest.formspec_escape(player.inbox[i])
+		end
+		fs = fs .. "]"
+		print(fs)
+		minetest.show_formspec(name, "chatplus:inbox", fs)
+	else
+		minetest.chat_send_player(name,"("..#player.inbox..") You have mail:")
+		for i=1,#player.inbox do
+			minetest.chat_send_player(name,player.inbox[i],false)
+		end
+		minetest.chat_send_player(name,"("..#player.inbox..")",false)
 	end
-	minetest.chat_send_player(name,"("..#player.inbox..")",false)
 
 	return true
 end
@@ -260,8 +275,10 @@ minetest.register_chatcommand("inbox", {
 			player.inbox = {}
 			chatplus.save()
 			minetest.chat_send_player(name,"Inbox cleared")
+		elseif param == "text" or param == "txt" or param == "t" then
+			chatplus.showInbox(name,true)
 		else
-			chatplus.showInbox(name)
+			chatplus.showInbox(name,false)
 		end
 	end,
 })
@@ -280,11 +297,11 @@ minetest.register_chatcommand("mail", {
 
 		minetest.log("To: "..to..", From: "..name..", MSG: "..msg)
 		if chatplus.log_handle ~= nil then
-		chatplus.log_handle:write(os.date("%d/%m/%Y %I:%M%p").." To: "..to..", From: "..name..", MSG: "..msg)
-		chatplus.log_handle:flush()
-	end
+			chatplus.log_handle:write(os.date("%d/%m/%Y %I:%M%p").." To: "..to..", From: "..name..", MSG: "..msg)
+			chatplus.log_handle:flush()
+		end
 		if chatplus.players[to] then
-			table.insert(chatplus.players[to].inbox,os.date("%d/%m/%Y %I:%M%p").." <"..name..">: "..msg)
+			table.insert(chatplus.players[to].inbox,os.date("%d/%m").." <"..name..">: "..msg)
 			minetest.chat_send_player(name,"Message sent")
 			chatplus.save()
 		else
