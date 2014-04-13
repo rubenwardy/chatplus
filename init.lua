@@ -8,7 +8,8 @@ chatplus = {
 	_defsettings = {
 		log = true,
 		use_gui = true,
-		distance = 0
+		distance = 0,
+		badwords = ""
 	}
 }
 
@@ -375,6 +376,17 @@ chatplus.register_handler(function(from,to,msg)
 		(vector.distance(from_o:getpos(),to_o:getpos()) > tonumber(chatplus.setting("distance")))
 	)then
 		return false
+	end
+	return nil
+end)
+
+chatplus.register_handler(function(from,to,msg)
+	local words = chatplus.setting("badwords"):split(",")
+	for _,v in pairs(words) do
+		if (v:trim()~="") and ( msg:find(v:trim(), 1, true) ~= nil ) then
+			minetest.chat_send_player(from, "Swearing is banned")
+			return false
+		end
 	end
 	return nil
 end)
