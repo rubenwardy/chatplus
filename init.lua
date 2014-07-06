@@ -139,7 +139,7 @@ function chatplus.send(from,msg)
 	-- Log chat message
 	if chatplus.log_handle ~= nil then
 		chatplus.log_handle:write(
-			os.date("%d/%m/%Y %I:%M%p")..
+			os.date("%Y/%m/%d %I:%M%p")..
 			" <"..from.."> "..
 			msg..
 			"\r\n"
