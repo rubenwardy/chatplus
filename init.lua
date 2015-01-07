@@ -246,15 +246,16 @@ function chatplus.showInbox(name,forcetest)
 	local setting = chatplus.setting("use_gui")
 	if (setting == true or setting == "true" or setting == "1") and not forcetest then
 		minetest.chat_send_player(name,"Showing your inbox to you.")
-		local fs = "size[10,5]textlist[0,0;9.75,5;inbox;"
+		local fs = "size[10,8]textarea[0.25,0.25;10.15,8;inbox;You have " .. #player.inbox .. " messages in your inbox:;"
+
 		for i=1,#player.inbox do
-			if i > 1 then
-				fs = fs .. ","
-			end
 			fs = fs .. minetest.formspec_escape(player.inbox[i])
+			fs = fs .. "\n"
 		end
+
 		fs = fs .. "]"
-		print(fs)
+		fs = fs .. "button[0,7.25;2,1;clear;Clear Inbox]"
+		fs = fs .. "button_exit[8.1,7.25;2,1;close;Close]"
 		minetest.show_formspec(name, "chatplus:inbox", fs)
 	else
 		minetest.chat_send_player(name,"("..#player.inbox..") You have mail:")
@@ -266,6 +267,16 @@ function chatplus.showInbox(name,forcetest)
 
 	return true
 end
+
+minetest.register_on_player_receive_fields(function(player,formname,fields)
+	if fields.clear then
+		local name = player:get_player_name()
+		chatplus.poke(name).inbox = {}
+		chatplus.save()
+		minetest.chat_send_player(name,"Inbox cleared!")
+		chatplus.showInbox(name)
+	end
+end)
 
 minetest.register_chatcommand("inbox", {
 	params = "clear?",
