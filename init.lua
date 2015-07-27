@@ -154,17 +154,19 @@ function chatplus.send(from, msg)
 	-- Loop through senders
 	for key,value in pairs(chatplus.loggedin) do
 		local res = nil
-		for i=1,#chatplus._handlers do
-			if chatplus._handlers[i] then
-				res = chatplus._handlers[i](from,key,msg)
-
-				if res ~= nil then
-					break
+		if key ~= from then
+			for i=1, #chatplus._handlers do
+				if chatplus._handlers[i] then
+					res = chatplus._handlers[i](from,key,msg)
+	
+					if res ~= nil then
+						break
+					end
 				end
 			end
-		end
-		if (res == nil or res == true) and key~=from then
-			minetest.chat_send_player(key,"<"..from.."> "..msg,false)
+			if res == nil or res == true then
+				minetest.chat_send_player(key,"<"..from.."> "..msg,false)
+			end
 		end
 	end
 
