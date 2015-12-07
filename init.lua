@@ -305,8 +305,7 @@ minetest.register_chatcommand("mail", {
 	params = "name msg",
 	description = "mail: add a message to a player's inbox",
 	func = function(name, param)
-		chatplus.poke
-		
+		chatplus.poke(name)
 		local to, msg = string.match(param, "^([%a%d_-]+) (.+)")
 
 		if not to or not msg then
