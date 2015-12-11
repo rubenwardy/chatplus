@@ -19,26 +19,33 @@ end)
 function chatplus.showInbox(name, text_mode)
 	-- Get player info
 	local player = chatplus.players[name]
-	if not player or not player.inbox or #player.inbox == 0 then
-		minetest.chat_send_player(name, "Your inbox is empty!")
-		return false
-	end
 
 	-- Show
 	if text_mode then
 		minetest.chat_send_player(name, "(" .. #player.inbox .. ") You have mail:")
-		for i = 1, #player.inbox do
-			minetest.chat_send_player(name, player.inbox[i])
+		if not player or not player.inbox or #player.inbox == 0 then
+			minetest.chat_send_player(name, "(" .. #player.inbox .. ")")
+		else
+			for i = 1, #player.inbox do
+				minetest.chat_send_player(name, player.inbox[i])
+			end
 		end
-		minetest.chat_send_player(name, "(" .. #player.inbox .. ")")
+		minetest.chat_send_player(name, "Your inbox is empty!")
 	else
 		minetest.chat_send_player(name, "Showing your inbox to you.")
-		local fs = "size[10,8]textarea[0.25,0.25;10.15,8;inbox;You have " ..
-			#player.inbox .. " messages in your inbox:;"
+		local fs = "size[10,8]"
+		fs = fs .. "vertlabel[0,0;C+ Mail]"
+		fs = fs .. "textarea[1,0.25;9.5,8;inbox;"
 
-		for i = 1, #player.inbox do
-			fs = fs .. minetest.formspec_escape(player.inbox[i])
-			fs = fs .. "\n"
+
+		if not player or not player.inbox or #player.inbox == 0 then
+			fs = fs .. "Your inbox is empty!;"
+		else
+			fs = fs .. "You have " ..#player.inbox .. " messages in your inbox:;"
+			for i = 1, #player.inbox do
+				fs = fs .. minetest.formspec_escape(player.inbox[i])
+				fs = fs .. "\n"
+			end
 		end
 
 		fs = fs .. "]"
