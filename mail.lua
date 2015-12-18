@@ -22,36 +22,53 @@ function chatplus.showInbox(name, text_mode)
 
 	-- Show
 	if text_mode then
-		minetest.chat_send_player(name, "(" .. #player.inbox .. ") You have mail:")
 		if not player or not player.inbox or #player.inbox == 0 then
-			minetest.chat_send_player(name, "(" .. #player.inbox .. ")")
+			return true, "Your inbox is empty!"
 		else
+			minetest.chat_send_player(name, #player.inbox .. " items in your inbox:")
 			for i = 1, #player.inbox do
-				minetest.chat_send_player(name, player.inbox[i])
+				local item = player.inbox[i]
+				minetest.chat_send_player(name, i .. ") " ..item.date ..
+					" <" .. item.from .. "> " .. item.msg)
 			end
+			return true, "End of mail (" .. #player.inbox .. " item)"
 		end
-		minetest.chat_send_player(name, "Your inbox is empty!")
 	else
-		minetest.chat_send_player(name, "Showing your inbox to you.")
-		local fs = "size[10,8]"
-		fs = fs .. "vertlabel[0,0;C+ Mail]"
-		fs = fs .. "textarea[1,0.25;9.5,8;inbox;"
+		local fs = "size[12,8]"
+		fs  = fs .. "vertlabel[0,0;Chatplus Mail]"
 
-
+		fs  = fs .. "tablecolumns[color;text;color;text;text]"
+		fs  = fs .. "tableoptions[highlight=#ffffff33]"
+		fs  = fs .. "table[0.5,0;11.25,7;inbox;"
+		fs  = fs .. "#ffffff,Date,,From,Message"
 		if not player or not player.inbox or #player.inbox == 0 then
-			fs = fs .. "Your inbox is empty!;"
+			fs = fs .. ",#d0d0d0,,#d0d0d0," ..
+				minetest.formspec_escape(":)") ..
+				"," ..
+				minetest.formspec_escape("Well done! Your inbox is empty!")
 		else
-			fs = fs .. "You have " ..#player.inbox .. " messages in your inbox:;"
 			for i = 1, #player.inbox do
-				fs = fs .. minetest.formspec_escape(player.inbox[i])
-				fs = fs .. "\n"
+				fs = fs .. ",#D0D0D0,"
+				fs = fs .. minetest.formspec_escape(player.inbox[i].date) .. ","
+				if minetest.check_player_privs(player.inbox[i].from, {kick = true, ban = true}) then
+					fs = fs .. "#FFD700,"
+				else
+					fs = fs .. "#ffffff,"
+				end
+				fs = fs .. minetest.formspec_escape(player.inbox[i].from) .. ","
+				fs = fs .. minetest.formspec_escape(player.inbox[i].msg)
 			end
 		end
-
 		fs = fs .. "]"
-		fs = fs .. "button[0,7.25;2,1;clear;Clear Inbox]"
-		fs = fs .. "button_exit[8.1,7.25;2,1;close;Close]"
+
+		fs = fs .. "button[0,7.25;2,1;clear;Delete All]"
+		--fs = fs .. "button[0,7.25;2,1;clear;Mark as read]"
+		fs = fs .. "button_exit[10.1,7.25;2,1;close;Close]"
+		fs = fs .. "label[2,7.4;Exit then type /mail username message to reply]"
+
 		minetest.show_formspec(name, "chatplus:inbox", fs)
+
+		return true, "Opened inbox!"
 	end
 
 	return true
@@ -62,9 +79,20 @@ minetest.register_on_player_receive_fields(function(player,formname,fields)
 		local name = player:get_player_name()
 		chatplus.poke(name).inbox = {}
 		chatplus.save()
-		minetest.chat_send_player(name,"Inbox cleared!")
+		minetest.chat_send_player(name, "Inbox cleared!")
 		chatplus.showInbox(name)
 	end
+
+	--[[if fields.mark_all_read then
+		if player and player.inbox and #player.inbox > 0 then
+			for i = 1, #player.inbox do
+				player.inbox[i].read = true
+			end
+			chatplus.save()
+			minetest.chat_send_player(name, "Marked all as read!")
+			chatplus.showInbox(name)
+		end
+	end]]--
 end)
 
 minetest.register_chatcommand("inbox", {
@@ -75,24 +103,31 @@ minetest.register_chatcommand("inbox", {
 			local player = chatplus.poke(name)
 			player.inbox = {}
 			chatplus.save()
-			minetest.chat_send_player(name,"Inbox cleared")
+
+			return true, "Inbox cleared"
 		elseif param == "text" or param == "txt" or param == "t" then
-			chatplus.showInbox(name,true)
+			return chatplus.showInbox(name, true)
 		else
-			chatplus.showInbox(name,false)
+			return chatplus.showInbox(name, false)
 		end
 	end
 })
 
 function chatplus.send_mail(name, to, msg)
-	minetest.log("C+Mail - To: "..to..", From: "..name..", MSG: "..msg)
-	chatplus.log("C+Mail - To: "..to..", From: "..name..", MSG: "..msg)
+	minetest.log("ChatplusMail - To: "..to..", From: "..name..", MSG: "..msg)
+	chatplus.log("ChatplusMail - To: "..to..", From: "..name..", MSG: "..msg)
 	if chatplus.players[to] then
-		table.insert(chatplus.players[to].inbox, os.date("%d/%m").." <"..name..">: "..msg)
-		minetest.chat_send_player(name, "Message sent to " .. to)
+		table.insert(chatplus.players[to].inbox, {
+			date = os.date("%Y-%m-%d %H:%M:%S"),
+			from = name,
+			msg = msg})
 		chatplus.save()
+
+		minetest.chat_send_player(to, name .. " sent you mail! Type /inbox to see it.")
+
+		return true, "Message sent to " .. to
 	else
-		minetest.chat_send_player(name,"Player '" .. to .. "' does not exist")
+		return false, "Player '" .. to .. "' does not exist"
 	end
 end
 
@@ -108,7 +143,7 @@ minetest.register_chatcommand("mail", {
 			return
 		end
 
-		chatplus.send_mail(name, to, msg)
+		return chatplus.send_mail(name, to, msg)
 	end
 })
 

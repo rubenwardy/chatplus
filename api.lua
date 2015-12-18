@@ -53,7 +53,7 @@ function chatplus.load()
 	if chatplus.setting("log") then
 		chatplus._log = io.open(chatplus._logpath, "a+")
 		if not chatplus._log then
-			minetest.log("error", "Unable to open chat plus log file: " .. chatplus._logpath)
+			minetest.log("error", "Unable to open the chatplus log file: " .. chatplus._logpath)
 		else
 			minetest.log("action", "Logging chat plus to: " .. chatplus._logpath)
 		end
@@ -64,10 +64,26 @@ function chatplus.load()
 	minetest.log("[Chatplus] Loading data")
 	local file = io.open(minetest.get_worldpath() .. "/chatplus.txt", "r")
 	if file then
-		local table = minetest.deserialize(file:read("*all"))
+		local from_file = minetest.deserialize(file:read("*all"))
 		file:close()
-		if type(table) == "table" then
-			chatplus.players = table
+		if type(from_file) == "table" then
+			if from_file.players and from_file.version >= 2 then
+				chatplus.players = from_file.players
+			else
+				chatplus.players = {}
+				for name, data in pairs(from_file) do
+					chatplus.players[name] = data
+					local inbox = data.inbox
+					data.inbox = {}
+					for _, msg in pairs(inbox) do
+						table.insert(data.inbox, {
+							date = "?",
+							from = "?",
+							msg = msg
+						})
+					end
+				end
+			end
 			return
 		end
 	end
@@ -78,7 +94,7 @@ function chatplus.save()
 
 	local file = io.open(minetest.get_worldpath().."/chatplus.txt", "w")
 	if file then
-		file:write(minetest.serialize(chatplus.players))
+		file:write(minetest.serialize({	version = 2, players = chatplus.players}))
 		file:close()
 	end
 end
@@ -193,7 +209,13 @@ end
 
 
 -- Minetest callbacks
-minetest.register_on_chat_message(chatplus.send)
+minetest.register_on_chat_message(function(...)
+	local ret = chatplus.send(...)
+	if ret and minetest.global_exists("irc") then
+		irc.on_chatmessage(...)
+	end
+	return ret
+end)
 minetest.register_on_joinplayer(function(player)
 	chatplus.log(player:get_player_name() .. " joined")
 end)
