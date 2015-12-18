@@ -211,7 +211,8 @@ end
 -- Minetest callbacks
 minetest.register_on_chat_message(function(...)
 	local ret = chatplus.send(...)
-	if ret and minetest.global_exists("irc") then
+	if ret and minetest.global_exists("irc") and
+			irc and irc.on_chatmessage then
 		irc.on_chatmessage(...)
 	end
 	return ret
