@@ -205,7 +205,7 @@ function chatplus.send(from, msg)
 
 			-- Send message
 			if res == nil or res == true then
-				minetest.chat_send_player(key, "<" .. from .. "> " .. msg)
+				minetest.chat_send_player(to, "<" .. from .. "> " .. msg)
 			end
 		end
 	end
