@@ -7,7 +7,7 @@
 
 
 chatplus = {
-	version = 2.2,
+	version = 2.3,
 	_logpath = minetest.get_worldpath().."/chatplus-log.txt",
 	_defsettings = {
 		log = true,
@@ -163,6 +163,14 @@ function chatplus.poke(name,player)
 
 	return chatplus.players[name]
 end
+
+minetest.register_on_joinplayer(function(player)
+	chatplus.poke(player:get_player_name(), player)
+end)
+
+minetest.register_on_leaveplayer(function(player)
+	chatplus.poke(player:get_player_name(), "end")
+end)
 
 function chatplus.register_handler(func,place)
 	if not place then
