@@ -189,6 +189,10 @@ function chatplus.send(from, msg)
 	if msg:sub(1, 1) == "/" then
 		return false
 	end
+	
+	if not minetest.check_player_privs(from, {shout = true}) then
+		return nil
+	end
 
 	chatplus.log_message(from, msg)
 
