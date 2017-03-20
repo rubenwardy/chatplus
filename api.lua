@@ -220,7 +220,7 @@ function chatplus.send(from, msg)
 				minetest.chat_send_player(to, "<" .. from .. "> " .. msg)
 			end
 		elseif minetest.features.no_chat_message_prediction then
-			minetest.chat_send_place(from, "<" .. from .. "> " .. msg)
+			minetest.chat_send_player(from, "<" .. from .. "> " .. msg)
 		end
 	end
 	return true
