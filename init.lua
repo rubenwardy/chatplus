@@ -53,8 +53,10 @@ minetest.register_chatcommand("unignore", {
 -- Distance
 --
 chatplus.register_handler(function(from, to, msg)
-	local d = chatplus.setting("distance")
-	if d <= 0 then
+	local d = tonumber(chatplus.setting("distance"))
+	if not d then
+		return true
+	elseif d <= 0 then
 		return nil
 	end
 
@@ -64,7 +66,7 @@ chatplus.register_handler(function(from, to, msg)
 		return nil
 	end
 
-	return not d or vector.distance(from_o:getpos(), to_o:getpos()) <= tonumber(d)
+	return vector.distance(from_o:getpos(), to_o:getpos()) <= d
 end)
 
 
